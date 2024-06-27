@@ -1,107 +1,130 @@
-// Function to fetch data from JSONPlaceholder API
-function fetchData(url, options = {}) {
-    return fetch(url, options)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
+document.addEventListener('DOMContentLoaded', function() {
+    const outputContainer = document.getElementById('output');
+
+    // Function to clear previous results
+    function clearResult() {
+        outputContainer.innerHTML = '';
+    }
+
+    // Function to fetch data from API and handle response
+    async function fetchData(url, options = {}) {
+        try {
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            return { error: 'Error fetching data' };
         }
-        return response.json();
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-      });
-}
+    }
 
-// Function to render JSON data to HTML
-function renderDataToHtml(data) {
-    const outputContainer = document.getElementById('output');
-    outputContainer.innerHTML = JSON.stringify(data, null, 2); // Convert JSON to string with indentation for readability
-}
+    // Function to render JSON data to HTML
+    function renderDataToHtml(data) {
+        const resultDiv = document.createElement('div');
+        resultDiv.classList.add('card', 'mb-3');
 
-// Function to hide the results
-function hideResults() {
-    const outputContainer = document.getElementById('output');
-    outputContainer.innerHTML = '';
-}
+        const cardBody = document.createElement('div');
+        cardBody.classList.add('card-body');
 
-// Get all posts
-document.getElementById('getAllPosts').addEventListener('click', function() {
-    hideResults();
-    fetchData('https://jsonplaceholder.typicode.com/posts')
-      .then(data => renderDataToHtml(data));
-});
+        const pre = document.createElement('pre');
+        pre.textContent = JSON.stringify(data, null, 2);
 
-// Get post with id of 10
-document.getElementById('getPostByIdOfTen').addEventListener('click', function() {
-    hideResults();
-    fetchData('https://jsonplaceholder.typicode.com/posts/10')
-      .then(data => renderDataToHtml(data));
-});
+        cardBody.appendChild(pre);
+        resultDiv.appendChild(cardBody);
 
-// Create a new post and log the id generated for it by the server
-document.getElementById('createNewPost').addEventListener('click', function() {
-    hideResults();
-    const newPost = {
-      title: 'New Post Title',
-      body: 'This is the body of the new post.',
-      userId: 1 // Replace with desired userId
-    };
+        outputContainer.appendChild(resultDiv);
+    }
 
-    fetchData('https://jsonplaceholder.typicode.com/posts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(newPost)
-    })
-    .then(data => {
-      renderDataToHtml(data); // Display the response data
+    // Event listeners for each button
+
+    // Get all posts
+    document.getElementById('getAllPosts').addEventListener('click', async function() {
+        clearResult();
+        const posts = await fetchData('https://jsonplaceholder.typicode.com/posts');
+        renderDataToHtml(posts);
     });
-});
 
-// Replace the post with id of 12 and render the response JSON
-document.getElementById('replacePost').addEventListener('click', function() {
-    hideResults();
-    const updatedPost = {
-      title: 'Updated Post Title',
-      body: 'This is the updated body of the post.',
-      userId: 1 // Replace with desired userId
-    };
+    // Get post by ID 10
+    document.getElementById('getPostByIdOfTen').addEventListener('click', async function() {
+        clearResult();
+        const post = await fetchData('https://jsonplaceholder.typicode.com/posts/10');
+        renderDataToHtml(post);
+    });
 
-    fetchData('https://jsonplaceholder.typicode.com/posts/12', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(updatedPost)
-    })
-    .then(data => renderDataToHtml(data));
-});
+    // Create a new post
+    document.getElementById('createNewPost').addEventListener('click', async function() {
+        clearResult();
+        const newPost = {
+            title: 'New Post Title',
+            body: 'This is the body of the new post',
+            userId: 1 // Adjust userId as needed
+        };
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newPost)
+        };
+        const createdPost = await fetchData('https://jsonplaceholder.typicode.com/posts', options);
+        renderDataToHtml(createdPost);
+    });
 
-// Update the title of post with id of 12 and render response JSON
-document.getElementById('updatePost').addEventListener('click', function() {
-    hideResults();
-    const updatedTitle = {
-      title: 'Updated Post Title'
-    };
+    // Replace post with ID 12
+    document.getElementById('replacePost').addEventListener('click', async function() {
+        clearResult();
+        const updatedPost = {
+            id: 12,
+            title: 'Updated Post Title',
+            body: 'This is the updated body of the post',
+            userId: 1 // Adjust userId as needed
+        };
+        const options = {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updatedPost)
+        };
+        const replacedPost = await fetchData('https://jsonplaceholder.typicode.com/posts/12', options);
+        renderDataToHtml(replacedPost);
+    });
 
-    fetchData('https://jsonplaceholder.typicode.com/posts/12', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(updatedTitle)
-    })
-    .then(data => renderDataToHtml(data));
-});
+    // Update title of post with ID 12
+    document.getElementById('updatePost').addEventListener('click', async function() {
+        clearResult();
+        const updatedTitle = {
+            title: 'Updated Title',
+        };
+        const options = {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updatedTitle)
+        };
+        const updated = await fetchData('https://jsonplaceholder.typicode.com/posts/12', options);
+        renderDataToHtml(updated);
+    });
 
-// Delete the post with id of 12 and render a success message
-document.getElementById('deletePost').addEventListener('click', function() {
-    hideResults();
-    fetchData('https://jsonplaceholder.typicode.com/posts/12', {
-      method: 'DELETE'
-    })
-    .then(() => {
-      renderDataToHtml({ message: 'Post with id 12 has been successfully deleted.' });
+    // Delete post with ID 12
+    document.getElementById('deletePost').addEventListener('click', async function() {
+        clearResult();
+        const options = {
+            method: 'DELETE'
+        };
+        try {
+            const response = await fetch('https://jsonplaceholder.typicode.com/posts/12', options);
+            if (!response.ok) {
+                throw new Error('Failed to delete post');
+            }
+            renderDataToHtml({ message: 'Post with ID 12 deleted successfully.' });
+        } catch (error) {
+            console.error('Error deleting post:', error);
+            renderDataToHtml({ error: 'Failed to delete post with ID 12.' });
+        }
     });
 });
